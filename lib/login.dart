@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mvc_online_laundry_service/admin_page.dart';
 import 'package:mysql1/mysql1.dart'; // Import mysql1 package
 import 'create_account.dart';
 import 'home_page.dart'; // Import the home page or the next page after login
@@ -16,11 +17,11 @@ class _LoginPageState extends State<LoginPage> {
     try {
       // Define the connection settings
       final connectionSettings = ConnectionSettings(
-        host: '192.168.0.32', // Your MySQL host IP
-        port: 3306, // Default MySQL port
-        user: 'outside', // Your MySQL username
-        db: 'mvc_laundry_service_db', // Your database name
-        password: '12345678', // Your MySQL password
+        host: 'sql12.freesqldatabase.com',
+        port: 3306,
+        user: 'sql12742390',
+        db: 'sql12742390',
+        password: 'uUufMJnN8I', // MySQL password
       );
 
       // Establish a connection
@@ -31,27 +32,36 @@ class _LoginPageState extends State<LoginPage> {
         'SELECT * FROM users WHERE username = ? AND password = ?',
         [
           _usernameController.text,
-          _passwordController.text, // You should hash the password before sending in production
+          _passwordController.text, // Hash the password in production
         ],
       );
 
       if (results.isNotEmpty) {
         var userRow = results.first;
         var userStatus = userRow['status']; // Assuming 'status' is the column name
+        var userRole = userRow['role']; // Assuming 'role' is the column name
+        var userId = userRow['id']; // Assuming 'id' is the column name
+        var userName = userRow['complete_name'] ?? '`Unknown User'; // Handle null case
+
+        // Print debug information
+        print('User ID: $userId, User Name: $userName, Status: $userStatus, Role: $userRole');
 
         if (userStatus == 'Active') {
-          // Login successful and status is Active
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Login successful')),
-          );
-
-          // Navigate to the HomePage or the desired page
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => HomePage()), // Replace with your HomePage or Dashboard
-          );
+          // Check the role and navigate accordingly
+          if (userRole == 'User') {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => HomePage(userId: userId, userName: userName), // Pass userId and userName
+              ),
+            );
+          } else if (userRole == 'Admin') {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => AdminPage()), // Navigate to AdminPage for Admins
+            );
+          }
         } else if (userStatus == 'Pending') {
-          // Account is still pending
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
@@ -61,7 +71,6 @@ class _LoginPageState extends State<LoginPage> {
             ),
           );
         } else {
-          // Handle other statuses if needed
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Your account status is: $userStatus'),
@@ -70,7 +79,6 @@ class _LoginPageState extends State<LoginPage> {
           );
         }
       } else {
-        // Login failed
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Invalid username or password')),
         );
@@ -79,7 +87,6 @@ class _LoginPageState extends State<LoginPage> {
       // Close the connection
       await conn.close();
     } catch (e) {
-      // Show error message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e')),
       );

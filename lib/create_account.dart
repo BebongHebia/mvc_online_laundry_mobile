@@ -27,11 +27,11 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
     try {
       // Define the connection settings
       final connectionSettings = ConnectionSettings(
-        host: '192.168.0.32', // Your MySQL host IP
-        port: 3306, // Default MySQL port
-        user: 'outside', // Your MySQL username
-        db: 'mvc_laundry_service_db', // Your database name
-        password: '12345678', // Your MySQL password
+      host: 'sql12.freesqldatabase.com',
+      port: 3306,
+      user: 'sql12742390',
+      db: 'sql12742390',
+      password: 'uUufMJnN8I', // MySQL password
       );
 
       // Establish a connection
