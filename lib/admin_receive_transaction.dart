@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:mvc_online_laundry_service/print_detail.dart';
 import 'package:mysql1/mysql1.dart';
 
 class AdminReceiveTransaction extends StatefulWidget {
@@ -251,6 +252,28 @@ void _calculateAmount() {
                           padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                         ),
                       ),
+                      SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: () {
+                          // Ensure you have the customer name from the transaction data
+                          String customerName = transactionData!['complete_name'] ?? 'Unknown';
+
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => PrintDetails(
+                                transactionCode: widget.transactionCode,
+                                customerName: customerName,
+                              ),
+                            ),
+                          );
+                        },
+                        child: Text("Print QR Code"),
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                        ),
+                      ),
+
                     ],
                   ),
                 )

@@ -9,6 +9,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.11.0"
+  blue_thermal_printer:
+    dependency: "direct main"
+    description:
+      name: blue_thermal_printer
+      sha256: "2b8a93f90be335494d2172dbc869c31b95638087f89591b4ad69fd9305eaf80b"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.2.3"
   boolean_selector:
     dependency: transitive
     description:
@@ -288,6 +296,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.1"
+  qr_flutter:
+    dependency: "direct main"
+    description:
+      name: qr_flutter
+      sha256: "5095f0fc6e3f71d08adef8feccc8cea4f12eec18a2e31c2e8d82cb6019f4b097"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.1.0"
   sky_engine:
     dependency: transitive
     description: flutter

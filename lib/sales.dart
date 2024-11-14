@@ -32,65 +32,80 @@ class _SalesState extends State<Sales> {
     _fetchSalesData(); // Load all data initially
   }
 
+  double _weeklySales = 0.0; // New variable to hold weekly sales
+
   Future<void> _fetchSalesData() async {
-    final conn = await MySqlConnection.connect(_settings);
-    try {
-      // Get today's date in 'yyyy-MM-dd' format for total sales calculation
-      final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+  final conn = await MySqlConnection.connect(_settings);
+  try {
+    final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
-      // Query to get the total sales amount for today
-      var totalResult = await conn.query(
-        'SELECT SUM(sales) as totalSales FROM sales WHERE date_paid = ?',
-        [today],
-      );
+    // Calculate start of the week (Monday)
+    final startOfWeek = DateTime.now().subtract(Duration(days: DateTime.now().weekday - 1));
+    final startOfWeekStr = DateFormat('yyyy-MM-dd').format(startOfWeek);
 
-      if (totalResult.isNotEmpty && totalResult.first['totalSales'] != null) {
-        _totalSalesToday = totalResult.first['totalSales'];
-      } else {
-        _totalSalesToday = 0.0; // Reset if there are no sales today
-      }
+    // Query to get the total sales amount for today
+    var totalResult = await conn.query(
+      'SELECT SUM(sales) as totalSales FROM sales WHERE date_paid = ?',
+      [today],
+    );
 
-      // Define query and parameters based on _selectedDate
-      String query;
-      List<Object> parameters;
-
-      if (_selectedDate != null) {
-        // Use selected date to filter data
-        final selectedDateString = '%${DateFormat('yyyy-MM-dd').format(_selectedDate!)}%';
-        query = 'SELECT transaction_code, sales, date_paid FROM sales WHERE date_paid LIKE ? ORDER BY date_paid DESC';
-        parameters = [selectedDateString];
-      } else {
-        // Fetch all records if no specific date is selected
-        query = 'SELECT transaction_code, sales, date_paid FROM sales ORDER BY date_paid DESC';
-        parameters = [];
-      }
-
-      // Execute query and map results
-      var salesResults = await conn.query(query, parameters);
-
-      _salesData = salesResults.map((row) {
-        return {
-          'transaction_code': row['transaction_code'],
-          'sales': row['sales'],
-          'date_paid': row['date_paid'],
-        };
-      }).toList();
-
-      setState(() {
-        _isLoading = false;
-      });
-    } catch (e) {
-      print("Database error: $e");
-      setState(() {
-        _isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error retrieving sales data")),
-      );
-    } finally {
-      await conn.close();
+    if (totalResult.isNotEmpty && totalResult.first['totalSales'] != null) {
+      _totalSalesToday = totalResult.first['totalSales'];
+    } else {
+      _totalSalesToday = 0.0;
     }
+
+    // Query to get total weekly sales
+    var weeklyResult = await conn.query(
+      'SELECT SUM(sales) as weeklySales FROM sales WHERE date_paid BETWEEN ? AND ?',
+      [startOfWeekStr, today],
+    );
+
+    if (weeklyResult.isNotEmpty && weeklyResult.first['weeklySales'] != null) {
+      _weeklySales = weeklyResult.first['weeklySales'];
+    } else {
+      _weeklySales = 0.0;
+    }
+
+    // Rest of the method unchanged...
+    String query;
+    List<Object> parameters;
+
+    if (_selectedDate != null) {
+      final selectedDateString = '%${DateFormat('yyyy-MM-dd').format(_selectedDate!)}%';
+      query = 'SELECT transaction_code, sales, date_paid FROM sales WHERE date_paid LIKE ? ORDER BY date_paid DESC';
+      parameters = [selectedDateString];
+    } else {
+      query = 'SELECT transaction_code, sales, date_paid FROM sales ORDER BY date_paid DESC';
+      parameters = [];
+    }
+
+    var salesResults = await conn.query(query, parameters);
+
+    _salesData = salesResults.map((row) {
+      return {
+        'transaction_code': row['transaction_code'],
+        'sales': row['sales'],
+        'date_paid': row['date_paid'],
+      };
+    }).toList();
+
+    setState(() {
+      _isLoading = false;
+    });
+  } catch (e) {
+    print("Database error: $e");
+    setState(() {
+      _isLoading = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Error retrieving sales data")),
+    );
+  } finally {
+    await conn.close();
   }
+}
+
 
   // Method to handle filtering by search term
   List<Map<String, dynamic>> _filterSalesData() {
@@ -151,6 +166,27 @@ class _SalesState extends State<Sales> {
                     ),
                   ),
                   SizedBox(height: 16),
+                // Weekly Sales Panel
+                Card(
+                  color: Colors.green.shade100,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Total Weekly Sales: ',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          '₱${_weeklySales.toStringAsFixed(2)}',
+                          style: TextStyle(fontSize: 18, color: Colors.green),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
