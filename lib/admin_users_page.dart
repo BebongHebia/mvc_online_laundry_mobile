@@ -30,11 +30,11 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
 
       // Define the connection settings
       final connectionSettings = ConnectionSettings(
-      host: 'sql12.freesqldatabase.com',
-      port: 3306,
-      user: 'sql12742390',
-      db: 'sql12742390',
-      password: 'uUufMJnN8I', // MySQL password
+        host: '192.168.1.9',
+        port: 3306,
+        user: 'outside',
+        db: 'mvc_laundry_service_db',
+        password: '12345678', // MySQL password
       );
 
       // Establish a connection
@@ -198,11 +198,11 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
   Future<void> _updateUser(int id, String completeName, String sex, String address, String phone, String status, String role, String email, String username) async {
     try {
       final connectionSettings = ConnectionSettings(
-      host: 'sql12.freesqldatabase.com',
-      port: 3306,
-      user: 'sql12742390',
-      db: 'sql12742390',
-      password: 'uUufMJnN8I', // MySQL password
+        host: '192.168.1.9',
+        port: 3306,
+        user: 'outside',
+        db: 'mvc_laundry_service_db',
+        password: '12345678', // MySQL password
       );
 
       final conn = await MySqlConnection.connect(connectionSettings);
@@ -270,11 +270,11 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
   Future<void> _deleteUser(int userId) async {
     try {
       final connectionSettings = ConnectionSettings(
-        host: 'sql12.freesqldatabase.com',
+        host: '192.168.1.9',
         port: 3306,
-        user: 'sql12742390',
-        db: 'sql12742390',
-        password: 'uUufMJnN8I', // MySQL password
+        user: 'outside',
+        db: 'mvc_laundry_service_db',
+        password: '12345678', // MySQL password
       );
 
       final conn = await MySqlConnection.connect(connectionSettings);

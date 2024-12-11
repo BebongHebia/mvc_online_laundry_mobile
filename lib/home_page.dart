@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mvc_online_laundry_service/feature_qr_code.dart';
 import 'package:mvc_online_laundry_service/feature_sms_notif.dart';
+import 'package:mvc_online_laundry_service/user_edit_profile.dart';
 import 'feature_wash_dry.dart';
 import 'package:intl/intl.dart';
 import 'package:mysql1/mysql1.dart';
@@ -18,17 +19,91 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late Future<List<Map<String, dynamic>>> _transactionFuture;
+  late Future<List<Map<String, dynamic>>> _latestTransactionFuture;
 
   @override
   void initState() {
     super.initState();
     _transactionFuture = _fetchTransactions();
+    _latestTransactionFuture = _fetchLatestTransaction();
   }
 
-  // Method to reload the transactions
+  // Fetch all transactions
+  Future<List<Map<String, dynamic>>> _fetchTransactions() async {
+    List<Map<String, dynamic>> transactions = [];
+    try {
+      final connectionSettings = ConnectionSettings(
+        host: '192.168.1.9',
+        port: 3306,
+        user: 'outside',
+        db: 'mvc_laundry_service_db',
+        password: '12345678', // MySQL password
+      );
+
+      final conn = await MySqlConnection.connect(connectionSettings);
+      var results = await conn.query(
+          'SELECT * FROM transactions WHERE customer_id = ?', [widget.userId]);
+
+      for (var row in results) {
+        transactions.add({
+          'id': row[0],
+          'customer_id': row[1],
+          'kilo': row[2],
+          'transaction_code': row[3],
+          'status': row[6],
+          'date': row[7],
+        });
+      }
+
+      await conn.close();
+    } catch (e) {
+      print('Error fetching transactions: $e');
+    }
+
+    return transactions;
+  }
+
+  // Fetch the latest transaction
+  Future<List<Map<String, dynamic>>> _fetchLatestTransaction() async {
+    List<Map<String, dynamic>> latestTransaction = [];
+    try {
+      final connectionSettings = ConnectionSettings(
+        host: '192.168.1.9',
+        port: 3306,
+        user: 'outside',
+        db: 'mvc_laundry_service_db',
+        password: '12345678', // MySQL password
+      );
+
+      final conn = await MySqlConnection.connect(connectionSettings);
+      var results = await conn.query(
+          'SELECT * FROM transactions WHERE customer_id = ? ORDER BY date DESC LIMIT 1',
+          [widget.userId]);
+
+      for (var row in results) {
+        latestTransaction.add({
+          'id': row[0],
+          'customer_id': row[1],
+          'kilo': row[2],
+          'transaction_code': row[3],
+          'status': row[6],
+          'date': row[7],
+        });
+      }
+
+      await conn.close();
+    } catch (e) {
+      print('Error fetching latest transaction: $e');
+    }
+
+    return latestTransaction;
+  }
+
+  // Method to reload transactions
   void _reloadTransactions() {
     setState(() {
       _transactionFuture = _fetchTransactions();
+      _latestTransactionFuture = _fetchLatestTransaction();
     });
   }
 
@@ -48,6 +123,19 @@ class _HomePageState extends State<HomePage> {
               'Logged in as: ${widget.userName} (ID: ${widget.userId})',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
+            IconButton(
+              icon: Icon(Icons.edit),
+              onPressed: () {
+                // Navigate to the user edit profile page
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        UserEditProfilePage(userId: widget.userId),
+                  ),
+                );
+              },
+            ),
             SizedBox(height: 20),
             Text(
               'Features:',
@@ -59,7 +147,8 @@ class _HomePageState extends State<HomePage> {
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 children: [
-                  _buildFeatureCard(Icons.local_laundry_service, 'Wash and Dry', context),
+                  _buildFeatureCard(
+                      Icons.local_laundry_service, 'Wash and Dry', context),
                   _buildFeatureCard(Icons.sms, 'SMS Notification', context),
                   _buildFeatureCard(Icons.qr_code, 'QR Code Driven', context),
                 ],
@@ -82,6 +171,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // Show transaction code dialog
   void _showTransactionCodeDialog(BuildContext context) {
     String transactionCode = _generateTransactionCode();
 
@@ -113,7 +203,8 @@ class _HomePageState extends State<HomePage> {
             ),
             TextButton(
               onPressed: () async {
-                await _addTransactionToDatabase(context, widget.userId, transactionCode);
+                await _addTransactionToDatabase(
+                    context, widget.userId, transactionCode);
                 Navigator.of(context).pop();
                 _reloadTransactions();
               },
@@ -125,6 +216,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // Generate transaction code
   String _generateTransactionCode() {
     DateTime now = DateTime.now();
     String year = DateFormat('yyyy').format(now);
@@ -135,14 +227,16 @@ class _HomePageState extends State<HomePage> {
     return '$year$month$day$timestamp';
   }
 
-  Future<void> _addTransactionToDatabase(BuildContext context, int customerId, String transactionCode) async {
+  // Add transaction to database
+  Future<void> _addTransactionToDatabase(
+      BuildContext context, int customerId, String transactionCode) async {
     try {
       final connectionSettings = ConnectionSettings(
-        host: 'sql12.freesqldatabase.com',
+        host: '192.168.1.9',
         port: 3306,
-        user: 'sql12742390',
-        db: 'sql12742390',
-        password: 'uUufMJnN8I',
+        user: 'outside',
+        db: 'mvc_laundry_service_db',
+        password: '12345678', // MySQL password
       );
 
       final conn = await MySqlConnection.connect(connectionSettings);
@@ -165,39 +259,45 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Future<List<Map<String, dynamic>>> _fetchTransactions() async {
-    List<Map<String, dynamic>> transactions = [];
-    try {
-      final connectionSettings = ConnectionSettings(
-        host: 'sql12.freesqldatabase.com',
-        port: 3306,
-        user: 'sql12742390',
-        db: 'sql12742390',
-        password: 'uUufMJnN8I',
-      );
+  // Build wash status panel
+  Widget _buildWashStatusPanel() {
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _latestTransactionFuture, // Use the initialized future here
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return Center(child: Text('No transactions found.'));
+        }
 
-      final conn = await MySqlConnection.connect(connectionSettings);
-      var results = await conn.query('SELECT * FROM transactions WHERE customer_id = ?', [widget.userId]);
+        // Extract the status of the latest transaction
+        var latestTransaction = snapshot.data!.first;
+        String status = latestTransaction['status'] ?? 'No status';
 
-      for (var row in results) {
-        transactions.add({
-          'id': row[0],
-          'customer_id': row[1],
-          'kilo': row[2],
-          'transaction_code': row[3],
-          'status': row[4],
-          'date': row[5],
-        });
-      }
-
-      await conn.close();
-    } catch (e) {
-      print('Error fetching transactions: $e');
-    }
-
-    return transactions;
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              children: [
+                Icon(Icons.local_laundry_service, size: 50, color: Colors.blue),
+                SizedBox(width: 20),
+                Expanded(
+                  child: Text(
+                    'Your wash status: $status',
+                    style: TextStyle(fontSize: 18),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
+  // Build transaction data table
   Widget _buildTransactionDataTable(BuildContext context) {
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: _transactionFuture,
@@ -244,6 +344,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // Show QR Code dialog
   void _showQRCodeDialog(BuildContext context, String transactionCode) {
     showDialog(
       context: context,
@@ -272,17 +373,21 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // Build feature cards
   Widget _buildFeatureCard(IconData icon, String title, BuildContext context) {
     return Card(
       margin: EdgeInsets.symmetric(horizontal: 8.0),
       child: InkWell(
         onTap: () {
           if (title == 'Wash and Dry') {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => FeatureWashDryPage()));
+            Navigator.push(context,
+                MaterialPageRoute(builder: (context) => FeatureWashDryPage()));
           } else if (title == 'SMS Notification') {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => FeatureSMSNotif()));
+            Navigator.push(context,
+                MaterialPageRoute(builder: (context) => FeatureSMSNotif()));
           } else if (title == 'QR Code Driven') {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => FeatureQRCode()));
+            Navigator.push(context,
+                MaterialPageRoute(builder: (context) => FeatureQRCode()));
           }
         },
         child: Container(
@@ -296,26 +401,6 @@ class _HomePageState extends State<HomePage> {
               Text(title, textAlign: TextAlign.center),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildWashStatusPanel() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            Icon(Icons.local_laundry_service, size: 50, color: Colors.blue),
-            SizedBox(width: 20),
-            Expanded(
-              child: Text(
-                'Your wash status: In Progress',
-                style: TextStyle(fontSize: 18),
-              ),
-            ),
-          ],
         ),
       ),
     );

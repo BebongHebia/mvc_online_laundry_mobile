@@ -31,11 +31,11 @@ class Transaction {
 class DatabaseHelper {
   static Future<MySqlConnection> connect() async {
     final settings = ConnectionSettings(
-      host: 'sql12.freesqldatabase.com',
-      port: 3306,
-      user: 'sql12742390',
-      db: 'sql12742390',
-      password: 'uUufMJnN8I',
+        host: '192.168.1.9',
+        port: 3306,
+        user: 'outside',
+        db: 'mvc_laundry_service_db',
+        password: '12345678', // MySQL password
     );
     return await MySqlConnection.connect(settings);
   }

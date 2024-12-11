@@ -16,9 +16,9 @@ class _ViewTransactionViaQrState extends State<ViewTransactionViaQr> {
     final _settings = ConnectionSettings(
       host: 'sql12.freesqldatabase.com',
       port: 3306,
-      user: 'sql12742390',
-      db: 'sql12742390',
-      password: 'uUufMJnN8I',
+      user: 'sql12745427',
+      db: 'sql12745427',
+      password: 'mhmT81dy7N',
     );
 
   @override

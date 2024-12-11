@@ -6,6 +6,13 @@
 <uses-permission android:name="android.permission.READ_SMS"/>
 <uses-permission android:name="android.permission.RECEIVE_WAP_PUSH"/>
 <uses-permission android:name="android.permission.RECEIVE_MMS"/>
+
+<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+<uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>
+
+
+
     <application
         android:label="mvc_online_laundry_service"
         android:name="${applicationName}"

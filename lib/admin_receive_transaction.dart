@@ -14,35 +14,51 @@ class AdminReceiveTransaction extends StatefulWidget {
 
 class _AdminReceiveTransactionState extends State<AdminReceiveTransaction> {
   final _settings = ConnectionSettings(
-      host: 'sql12.freesqldatabase.com',
-      port: 3306,
-      user: 'sql12742390',
-      db: 'sql12742390',
-      password: 'uUufMJnN8I',
+    host: '192.168.1.9',
+    port: 3306,
+    user: 'outside',
+    db: 'mvc_laundry_service_db',
+    password: '12345678', // MySQL password
   );
 
   Map<String, dynamic>? transactionData;
   bool isLoading = true;
 
-  // Checkbox states
-  bool withSoap = false;
-  bool withFabricConditioner = false;
+  // List of services fetched from the database
+  List<Map<String, dynamic>> servicesList = [];
 
   // Controllers
   final TextEditingController kiloController = TextEditingController();
   double amount = 0.0;
 
   final double pricePerKilo = 40.0;
-  final double soapPricePerKilo = 10.0;
-  final double fabricConditionerPricePerKilo = 10.0;
 
   @override
   void initState() {
     super.initState();
     _fetchTransactionDetails();
+    _fetchServices();  // Fetch services data from database
     kiloController.addListener(_calculateAmount);
   }
 
+  // Fetch services from the database
+  Future<void> _fetchServices() async {
+    final conn = await MySqlConnection.connect(_settings);
+    try {
+      var results = await conn.query('SELECT * FROM services');
+      setState(() {
+        servicesList = results
+            .map((row) => {'id': row[0], 'service': row[1], 'price': row[2]})
+            .toList();
+      });
+    } catch (e) {
+      print("Error fetching services: $e");
+    } finally {
+      await conn.close();
+    }
+  }
+
+  // Fetch transaction details from the database
   Future<void> _fetchTransactionDetails() async {
     final conn = await MySqlConnection.connect(_settings);
     try {
@@ -82,44 +98,43 @@ class _AdminReceiveTransactionState extends State<AdminReceiveTransaction> {
     }
   }
 
-void _calculateAmount() {
-  final kilos = double.tryParse(kiloController.text) ?? 0.0;
-  double totalAmount = 0.0;
+  // Calculate total amount based on selected services and kilos
+  void _calculateAmount() {
+    final kilos = double.tryParse(kiloController.text) ?? 0.0;
+    double totalAmount = 0.0;
 
-  if (kilos > 0 && kilos <= 8) {
-    totalAmount = 100.0;
-  } else if (kilos > 8 && kilos <= 13) {
-    totalAmount = 200.0;
-  } else if (kilos > 13) {
-    totalAmount = 200.0 + ((kilos - 13) * 30.0);
+    if (kilos > 0 && kilos <= 8) {
+      totalAmount = 100.0;
+    } else if (kilos > 8 && kilos <= 13) {
+      totalAmount = 200.0;
+    } else if (kilos > 13) {
+      totalAmount = 200.0 + ((kilos - 13) * 30.0);
+    }
+
+    // Add prices from selected services
+    for (var service in servicesList) {
+      if (service['isSelected'] == true) {
+        totalAmount += service['price'];
+      }
+    }
+
+    setState(() {
+      amount = totalAmount;
+    });
   }
 
-  // Add fixed costs if soap and fabric conditioner are selected
-  if (withSoap) {
-    totalAmount += 10.0;
-  }
-  if (withFabricConditioner) {
-    totalAmount += 10.0;
-  }
-
-  setState(() {
-    amount = totalAmount;
-  });
-}
-
+  // Update transaction details
   Future<void> _updateTransaction() async {
     final conn = await MySqlConnection.connect(_settings);
     try {
       await conn.query(
         '''
         UPDATE transactions 
-        SET kilo = ?, with_soap = ?, with_fabric_con = ?, status = 'Received'
+        SET kilo = ?, status = 'Received'
         WHERE transaction_code = ?
         ''',
         [
           double.tryParse(kiloController.text) ?? 0.0,
-          withSoap ? 1 : 0,
-          withFabricConditioner ? 1 : 0,
           widget.transactionCode,
         ],
       );
@@ -135,16 +150,19 @@ void _calculateAmount() {
     } finally {
       await conn.close();
     }
+
+    Navigator.pop(context);
   }
 
+  // Add sales entry
   Future<void> _add_Sales() async {
     final conn = await MySqlConnection.connect(_settings);
     final currentDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
     try {
       await conn.query(
         '''
-        insert into sales (transaction_code, sales, date_paid) value(?, ?, ?)
-
+        INSERT INTO sales (transaction_code, sales, date_paid) 
+        VALUES (?, ?, ?)
         ''',
         [
           widget.transactionCode,
@@ -152,27 +170,27 @@ void _calculateAmount() {
           currentDate
         ],
       );
-
     } catch (e) {
-      print("Update error: $e");
+      print("Sales insert error: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error updating transaction")),
+        SnackBar(content: Text("Error adding sales record")),
       );
     } finally {
       await conn.close();
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Transaction Details'),
-      ),
-      body: isLoading
-          ? Center(child: CircularProgressIndicator())
-          : transactionData != null
-              ? Padding(
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(
+      title: Text('Transaction Details'),
+    ),
+    body: isLoading
+        ? Center(child: CircularProgressIndicator())
+        : transactionData != null
+            ? SingleChildScrollView(  // Wrap the Column with a SingleChildScrollView
+                child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     children: [
@@ -206,26 +224,19 @@ void _calculateAmount() {
                         decoration: InputDecoration(labelText: 'Transaction Date'),
                         readOnly: true,
                       ),
-                      CheckboxListTile(
-                        title: Text("With Soap"),
-                        value: withSoap,
-                        onChanged: (value) {
-                          setState(() {
-                            withSoap = value ?? false;
-                          });
-                          _calculateAmount();
-                        },
-                      ),
-                      CheckboxListTile(
-                        title: Text("With Fabric Conditioner"),
-                        value: withFabricConditioner,
-                        onChanged: (value) {
-                          setState(() {
-                            withFabricConditioner = value ?? false;
-                          });
-                          _calculateAmount();
-                        },
-                      ),
+                      // Display services dynamically with checkboxes
+                      ...servicesList.map((service) {
+                        return CheckboxListTile(
+                          title: Text("${service['service']} - ₱${service['price']}"),
+                          value: service['isSelected'] ?? false,
+                          onChanged: (value) {
+                            setState(() {
+                              service['isSelected'] = value;
+                            });
+                            _calculateAmount();
+                          },
+                        );
+                      }).toList(),
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8.0),
                         child: Row(
@@ -243,7 +254,7 @@ void _calculateAmount() {
                       ),
                       SizedBox(height: 20),
                       ElevatedButton(
-                        onPressed: (){
+                        onPressed: () {
                           _add_Sales();
                           _updateTransaction();
                         },
@@ -255,7 +266,6 @@ void _calculateAmount() {
                       SizedBox(height: 20),
                       ElevatedButton(
                         onPressed: () {
-                          // Ensure you have the customer name from the transaction data
                           String customerName = transactionData!['complete_name'] ?? 'Unknown';
 
                           Navigator.push(
@@ -273,13 +283,14 @@ void _calculateAmount() {
                           padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                         ),
                       ),
-
                     ],
                   ),
-                )
-              : Center(child: Text("No transaction data found")),
-    );
-  }
+                ),
+              )
+            : Center(child: Text("No transaction data found")),
+  );
+}
+
 
   @override
   void dispose() {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mvc_online_laundry_service/admin_page.dart';
+import 'package:mvc_online_laundry_service/forgot_acc.dart';
 import 'package:mysql1/mysql1.dart'; // Import mysql1 package
 import 'create_account.dart';
 import 'home_page.dart'; // Import the home page or the next page after login
@@ -17,11 +18,11 @@ class _LoginPageState extends State<LoginPage> {
     try {
       // Define the connection settings
       final connectionSettings = ConnectionSettings(
-        host: 'sql12.freesqldatabase.com',
+        host: '192.168.1.9',
         port: 3306,
-        user: 'sql12742390',
-        db: 'sql12742390',
-        password: 'uUufMJnN8I', // MySQL password
+        user: 'outside',
+        db: 'mvc_laundry_service_db',
+        password: '12345678', // MySQL password
       );
 
       // Establish a connection
@@ -38,13 +39,16 @@ class _LoginPageState extends State<LoginPage> {
 
       if (results.isNotEmpty) {
         var userRow = results.first;
-        var userStatus = userRow['status']; // Assuming 'status' is the column name
+        var userStatus =
+            userRow['status']; // Assuming 'status' is the column name
         var userRole = userRow['role']; // Assuming 'role' is the column name
         var userId = userRow['id']; // Assuming 'id' is the column name
-        var userName = userRow['complete_name'] ?? '`Unknown User'; // Handle null case
+        var userName =
+            userRow['complete_name'] ?? '`Unknown User'; // Handle null case
 
         // Print debug information
-        print('User ID: $userId, User Name: $userName, Status: $userStatus, Role: $userRole');
+        print(
+            'User ID: $userId, User Name: $userName, Status: $userStatus, Role: $userRole');
 
         if (userStatus == 'Active') {
           // Check the role and navigate accordingly
@@ -52,13 +56,17 @@ class _LoginPageState extends State<LoginPage> {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder: (context) => HomePage(userId: userId, userName: userName), // Pass userId and userName
+                builder: (context) => HomePage(
+                    userId: userId,
+                    userName: userName), // Pass userId and userName
               ),
             );
           } else if (userRole == 'Admin') {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => AdminPage()), // Navigate to AdminPage for Admins
+              MaterialPageRoute(
+                  builder: (context) =>
+                      AdminPage()), // Navigate to AdminPage for Admins
             );
           }
         } else if (userStatus == 'Pending') {
@@ -165,7 +173,8 @@ class _LoginPageState extends State<LoginPage> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => CreateAccountPage()),
+                      MaterialPageRoute(
+                          builder: (context) => CreateAccountPage()),
                     );
                   },
                   child: Text(
@@ -182,8 +191,12 @@ class _LoginPageState extends State<LoginPage> {
                 SizedBox(height: 20),
                 GestureDetector(
                   onTap: () {
-                    // Navigate to Forgot Password page or functionality
-                    print('Navigate to Forgot Password');
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              ForgotPasswordPage()), // Navigate to ForgotPasswordPage
+                    );
                   },
                   child: Text(
                     'Forgot Password',

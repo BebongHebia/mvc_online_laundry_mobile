@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mvc_online_laundry_service/admin_rec_scan_qr.dart';
 import 'package:mvc_online_laundry_service/admin_transaction_list.dart';
 import 'package:mvc_online_laundry_service/sales.dart';
+import 'package:mvc_online_laundry_service/services.dart'; // Import the Services page
 import 'package:mysql1/mysql1.dart';
 import 'admin_users_page.dart';
 
@@ -21,11 +22,11 @@ class _AdminPageState extends State<AdminPage> {
 
   Future<void> fetchTableData() async {
     final conn = await MySqlConnection.connect(ConnectionSettings(
-      host: 'sql12.freesqldatabase.com',
-      port: 3306,
-      user: 'sql12742390',
-      db: 'sql12742390',
-      password: 'uUufMJnN8I',
+        host: '192.168.1.9',
+        port: 3306,
+        user: 'outside',
+        db: 'mvc_laundry_service_db',
+        password: '12345678', // MySQL password
     ));
 
     var results = await conn.query(
@@ -63,16 +64,22 @@ class _AdminPageState extends State<AdminPage> {
                       MaterialPageRoute(builder: (context) => AdminUsersPage()),
                     );
                   }),
-                  _buildDashboardCard(Icons.shopping_cart, 'Transaction List', (){
+                  _buildDashboardCard(Icons.shopping_cart, 'Transaction List', () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => AdminTransactionList()),
                     );
                   }),
-                  _buildDashboardCard(Icons.attach_money, 'Sales', (){
+                  _buildDashboardCard(Icons.attach_money, 'Sales', () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => Sales()),
+                    );
+                  }),
+                  _buildDashboardCard(Icons.design_services, 'Services', () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => Services()), // Navigate to Services page
                     );
                   }),
                 ],
