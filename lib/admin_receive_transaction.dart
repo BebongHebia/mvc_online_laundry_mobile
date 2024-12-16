@@ -14,11 +14,11 @@ class AdminReceiveTransaction extends StatefulWidget {
 
 class _AdminReceiveTransactionState extends State<AdminReceiveTransaction> {
   final _settings = ConnectionSettings(
-    host: '192.168.1.9',
-    port: 3306,
-    user: 'outside',
-    db: 'mvc_laundry_service_db',
-    password: '12345678', // MySQL password
+        host: '192.168.1.11',
+        port: 3306,
+        user: 'outside',
+        db: 'mvc_laundry_service_db',
+        password: '12345678', // MySQL password
   );
 
   Map<String, dynamic>? transactionData;

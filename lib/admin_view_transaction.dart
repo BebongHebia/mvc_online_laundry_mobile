@@ -12,8 +12,7 @@ class Transaction {
   final String transactionCode;
   final int? kilo;
   final String date;
-  final bool withSoap;
-  final bool withFabricCon;
+  final double sales;
 
   Transaction({
     required this.id,
@@ -22,8 +21,7 @@ class Transaction {
     required this.transactionCode,
      this.kilo,
     required this.date,
-    required this.withSoap,
-    required this.withFabricCon,
+    required this.sales,
   });
 }
 
@@ -31,7 +29,7 @@ class Transaction {
 class DatabaseHelper {
   static Future<MySqlConnection> connect() async {
     final settings = ConnectionSettings(
-        host: '192.168.1.9',
+        host: '192.168.1.11',
         port: 3306,
         user: 'outside',
         db: 'mvc_laundry_service_db',
@@ -43,7 +41,7 @@ class DatabaseHelper {
   static Future<Transaction?> getTransactionByCode(String transactionCode) async {
     final conn = await connect();
     var result = await conn.query(
-      'SELECT * FROM transactions INNER JOIN users ON users.id = transactions.customer_id WHERE transactions.transaction_code = ?',
+      'SELECT * FROM transactions INNER JOIN users ON users.id = transactions.customer_id INNER JOIN sales on sales.transaction_code = transactions.transaction_code WHERE transactions.transaction_code = ?',
       [transactionCode],
     );
 
@@ -57,8 +55,7 @@ class DatabaseHelper {
         transactionCode: row['transaction_code'],
         kilo: row['kilo'],
         date: row['date'],
-        withSoap: row['with_soap'] == 1,
-        withFabricCon: row['with_fabric_con'] == 1,
+        sales: row['sales'],
       );
     }
     await conn.close();
@@ -151,10 +148,8 @@ class AdminViewTransaction extends StatelessWidget {
                   SizedBox(height: 8),
                   Text('Date: ${transaction.date}', style: TextStyle(fontSize: 18)),
                   SizedBox(height: 8),
-                  Text('With Soap: ${transaction.withSoap ? 'Yes' : 'No'}', style: TextStyle(fontSize: 18)),
+                  Text('Sales: ${transaction.sales}', style: TextStyle(fontSize: 18)),
                   SizedBox(height: 8),
-                  Text('With Fabric Conditioner: ${transaction.withFabricCon ? 'Yes' : 'No'}', style: TextStyle(fontSize: 18)),
-                  SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () => _finishTransaction(context, transaction),
                     child: Text('Finish'),

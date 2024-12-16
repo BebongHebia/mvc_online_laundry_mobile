@@ -22,7 +22,7 @@ class _AdminPageState extends State<AdminPage> {
 
   Future<void> fetchTableData() async {
     final conn = await MySqlConnection.connect(ConnectionSettings(
-        host: '192.168.1.9',
+        host: '192.168.1.11',
         port: 3306,
         user: 'outside',
         db: 'mvc_laundry_service_db',

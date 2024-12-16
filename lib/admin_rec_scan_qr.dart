@@ -16,7 +16,7 @@ class _AdminRecScanQrState extends State<AdminRecScanQr> {
 
   // MySQL connection settings
   final _settings = ConnectionSettings(
-        host: '192.168.1.9',
+        host: '192.168.1.11',
         port: 3306,
         user: 'outside',
         db: 'mvc_laundry_service_db',

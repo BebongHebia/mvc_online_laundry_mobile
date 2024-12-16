@@ -33,7 +33,7 @@ class _HomePageState extends State<HomePage> {
     List<Map<String, dynamic>> transactions = [];
     try {
       final connectionSettings = ConnectionSettings(
-        host: '192.168.1.9',
+        host: '192.168.1.11',
         port: 3306,
         user: 'outside',
         db: 'mvc_laundry_service_db',
@@ -68,7 +68,7 @@ class _HomePageState extends State<HomePage> {
     List<Map<String, dynamic>> latestTransaction = [];
     try {
       final connectionSettings = ConnectionSettings(
-        host: '192.168.1.9',
+        host: '192.168.1.11',
         port: 3306,
         user: 'outside',
         db: 'mvc_laundry_service_db',
@@ -123,8 +123,7 @@ class _HomePageState extends State<HomePage> {
               'Logged in as: ${widget.userName} (ID: ${widget.userId})',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
-            IconButton(
-              icon: Icon(Icons.edit),
+            TextButton.icon(
               onPressed: () {
                 // Navigate to the user edit profile page
                 Navigator.push(
@@ -135,6 +134,18 @@ class _HomePageState extends State<HomePage> {
                   ),
                 );
               },
+              icon: Icon(
+                Icons.account_circle,
+                color: Colors.blue,
+                size: 32.0, // Set the size of the icon (default is 24.0)
+              ),
+              label: Text(
+                "Edit Profile",
+                style: TextStyle(
+                  color: Colors.blue,
+                  fontSize: 16.0, // Optional: Adjust text size for balance
+                ),
+              ),
             ),
             SizedBox(height: 20),
             Text(
@@ -232,7 +243,7 @@ class _HomePageState extends State<HomePage> {
       BuildContext context, int customerId, String transactionCode) async {
     try {
       final connectionSettings = ConnectionSettings(
-        host: '192.168.1.9',
+        host: '192.168.1.11',
         port: 3306,
         user: 'outside',
         db: 'mvc_laundry_service_db',

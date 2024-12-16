@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:mysql1/mysql1.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter_email_sender/flutter_email_sender.dart';
 import 'package:path_provider/path_provider.dart';
-import 'dart:io';
 import 'package:permission_handler/permission_handler.dart';
-
-import 'email_service.dart';
+import 'dart:io';
+import 'package:file_picker/file_picker.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
 
 class Reports extends StatefulWidget {
   @override
@@ -15,7 +15,7 @@ class Reports extends StatefulWidget {
 
 class _ReportsState extends State<Reports> {
   final _settings = ConnectionSettings(
-    host: '192.168.1.9',
+    host: '192.168.1.11',
     port: 3306,
     user: 'outside',
     db: 'mvc_laundry_service_db',
@@ -134,32 +134,79 @@ class _ReportsState extends State<Reports> {
     }).toList();
   }
 
-  Future<void> _generatePdfAndSendEmail() async {
-    // Request storage permission
-    PermissionStatus status = await Permission.manageExternalStorage.request();
+  Future<void> _requestStoragePermission() async {
+    if (await Permission.storage.isGranted) return;
 
-    if (status != PermissionStatus.granted) {
+    if (Platform.isAndroid && await Permission.manageExternalStorage.isGranted) return;
+
+    var result = await Permission.storage.request();
+    if (result.isDenied || result.isPermanentlyDenied) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Permission denied to access storage')),
+        SnackBar(content: Text('Storage permission is required to download the PDF')),
+      );
+      openAppSettings();
+    }
+  }
+
+  Future<void> _downloadPdfReport() async {
+  await _requestStoragePermission();
+
+  try {
+    // Open a directory picker
+    String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
+
+    // If the user cancels or no directory is selected
+    if (selectedDirectory == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No directory selected')),
       );
       return;
     }
 
-    // Create PDF (simplified)
-    final directory = await getApplicationDocumentsDirectory();
-    String filePath = '${directory.path}/SalesReport.pdf';
-    var file = File(filePath);
+    // Generate the PDF content
+    final pdf = pw.Document();
 
-    // Here you would generate a PDF and save it to `filePath`
-    // For now, it's just an empty file for demonstration.
+    pdf.addPage(
+      pw.Page(
+        build: (pw.Context context) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text('Sales Report', style: pw.TextStyle(fontSize: 24)),
+              pw.SizedBox(height: 16),
+              pw.Table.fromTextArray(
+                headers: ['Transaction Code', 'Sales', 'Date Paid'],
+                data: _salesData.map((sale) {
+                  return [
+                    sale['transaction_code'],
+                    '₱${sale['sales'].toStringAsFixed(2)}',
+                    sale['date_paid'],
+                  ];
+                }).toList(),
+              ),
+            ],
+          );
+        },
+      ),
+    );
 
-    // Send email with the PDF attached
-    sendEmail(filePath);  // Pass the path to the generated PDF
+    // Save the file in the selected directory
+    String filePath = '$selectedDirectory/SalesReport.pdf';
+    File file = File(filePath);
+
+    // Write the PDF content to the file
+    await file.writeAsBytes(await pdf.save());
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Email sent successfully!')),
+      SnackBar(content: Text('PDF downloaded to: $filePath')),
+    );
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Failed to save PDF: $e')),
     );
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -180,7 +227,6 @@ class _ReportsState extends State<Reports> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Sales Data Table
                     TextField(
                       decoration: InputDecoration(
                         labelText: 'Search',
@@ -206,10 +252,9 @@ class _ReportsState extends State<Reports> {
                               .map((sale) {
                               DateTime? datePaid;
                               try {
-                                // Parse the date_paid string into a DateTime object
                                 datePaid = DateTime.parse(sale['date_paid']);
                               } catch (e) {
-                                datePaid = null; // Handle invalid date formats
+                                datePaid = null;
                               }
 
                               return DataRow(
@@ -237,8 +282,6 @@ class _ReportsState extends State<Reports> {
                             ],
                     ),
                     SizedBox(height: 16),
-
-                    // Pagination controls
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -266,77 +309,9 @@ class _ReportsState extends State<Reports> {
                       ],
                     ),
                     SizedBox(height: 16),
-
-                    // Summary sections
-                    // Weekly Summary
-                    Container(
-                      padding: EdgeInsets.all(16),
-                      color: const Color.fromARGB(255, 122, 213, 255),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Weekly Summary',
-                              style: TextStyle(fontSize: 18)),
-                          ..._weeklySummary.map((data) {
-                            return ListTile(
-                              title: Text(
-                                  '${DateFormat.MMMM().format(DateTime(0, data['month']))}, Week ${data['week']}'),
-                              trailing: Text(
-                                  '₱${data['total_sales'].toStringAsFixed(2)}'),
-                            );
-                          }).toList(),
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: 16),
-
-                    // Monthly Summary
-                    Container(
-                      padding: EdgeInsets.all(16),
-                      color: const Color.fromARGB(255, 227, 255, 195),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Monthly Summary',
-                              style: TextStyle(fontSize: 18)),
-                          ..._monthlySummary.map((data) {
-                            return ListTile(
-                              title: Text(
-                                  '${DateFormat.MMMM().format(DateTime(0, data['month']))}, ${data['year']}'),
-                              trailing: Text(
-                                  '₱${data['total_sales'].toStringAsFixed(2)}'),
-                            );
-                          }).toList(),
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: 16),
-
-                    // Yearly Summary
-                    Container(
-                      padding: EdgeInsets.all(16),
-                      color: const Color.fromARGB(255, 255, 241, 188),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Yearly Summary',
-                              style: TextStyle(fontSize: 18)),
-                          ..._yearlySummary.map((data) {
-                            return ListTile(
-                              title: Text('${data['year']}'),
-                              trailing: Text(
-                                  '₱${data['total_sales'].toStringAsFixed(2)}'),
-                            );
-                          }).toList(),
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: 16),
-
-                    // Send Email Button
                     ElevatedButton(
-                      onPressed: _generatePdfAndSendEmail,
-                      child: Text('Send Report via Email'),
+                      onPressed: _downloadPdfReport,
+                      child: Text('Download Report as PDF'),
                     ),
                   ],
                 ),

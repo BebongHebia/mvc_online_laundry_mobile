@@ -22,7 +22,7 @@ class _RecoverAccountPageState extends State<RecoverAccountPage> {
       try {
         // Establish a connection to the database
         final connectionSettings = ConnectionSettings(
-          host: '192.168.1.9', // Your database host
+          host: '192.168.1.11', // Your database host
           port: 3306,
           user: 'outside', // Your database user
           db: 'mvc_laundry_service_db', // Your database name

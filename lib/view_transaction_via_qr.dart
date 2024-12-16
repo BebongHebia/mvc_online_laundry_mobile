@@ -14,11 +14,11 @@ class _ViewTransactionViaQrState extends State<ViewTransactionViaQr> {
 
       // MySQL connection settings
     final _settings = ConnectionSettings(
-      host: 'sql12.freesqldatabase.com',
+      host: '192.168.1.11',
       port: 3306,
-      user: 'sql12745427',
-      db: 'sql12745427',
-      password: 'mhmT81dy7N',
+      user: 'outside',
+      db: 'mvc_laundry_service_db',
+      password: '12345678', // MySQL password
     );
 
   @override

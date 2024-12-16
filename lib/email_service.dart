@@ -6,7 +6,7 @@ import 'package:mailer/smtp_server.dart';
 
 Future<void> sendEmail(String attachmentPath) async {
   String username = 'hebiadavinci@gmail.com';  // Replace with your email
-  String password = 'bebonghebia3';  // Replace with your app-specific password
+  String password = 'nqaihixkfrphmwve';  // Replace with your app-specific password
 
   final smtpServer = gmail(username, password);
 

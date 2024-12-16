@@ -12,8 +12,7 @@ class Transaction {
   final String transactionCode;
   final String status;
   final String date;
-  final bool withSoap;
-  final bool withFabricCon;
+  final double sales;
 
   Transaction({
     required this.id,
@@ -22,8 +21,7 @@ class Transaction {
     required this.transactionCode,
     required this.status,
     required this.date,
-    required this.withSoap,
-    required this.withFabricCon,
+    required this.sales,
   });
 }
 
@@ -31,7 +29,7 @@ class Transaction {
 class DatabaseHelper {
   static Future<MySqlConnection> connect() async {
     final settings = ConnectionSettings(
-        host: '192.168.1.9',
+        host: '192.168.1.11',
         port: 3306,
         user: 'outside',
         db: 'mvc_laundry_service_db',
@@ -43,7 +41,7 @@ class DatabaseHelper {
   static Future<List<Transaction>> getTransactions() async {
     final conn = await connect();
     var results = await conn.query(
-      'SELECT *, transactions.status as trans_status FROM transactions INNER JOIN users ON transactions.customer_id = users.id'
+      'SELECT *, transactions.status as trans_status FROM transactions INNER JOIN users ON transactions.customer_id = users.id INNER JOIN sales ON sales.transaction_code = transactions.transaction_code'
     );
 
     List<Transaction> transactions = [];
@@ -56,8 +54,7 @@ class DatabaseHelper {
         transactionCode: row['transaction_code'],
         status: row['trans_status'],
         date: row['date'],
-        withSoap: row['with_soap'] == 1,
-        withFabricCon: row['with_fabric_con'] == 1,
+        sales: row['sales'],
       ));
     }
 
@@ -186,8 +183,7 @@ class _AdminTransactionListState extends State<AdminTransactionList> {
                                       Text('Kilos: ${transaction.kilo != null ? transaction.kilo.toString() : 'N/A'} kg'),
                                       Text('Status: ${transaction.status}'),
                                       Text('Date: ${transaction.date}'),
-                                      Text('With Soap: ${transaction.withSoap ? 'Yes' : 'No'}'),
-                                      Text('With Fabric Conditioner: ${transaction.withFabricCon ? 'Yes' : 'No'}'),
+                                      Text('Total Amount: ${transaction.sales}'),
                                     ],
                                   ),
                                   trailing: Text('ID: ${transaction.id}'),

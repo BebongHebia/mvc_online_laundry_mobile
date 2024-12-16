@@ -30,7 +30,7 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
 
       // Define the connection settings
       final connectionSettings = ConnectionSettings(
-        host: '192.168.1.9',
+        host: '192.168.1.11',
         port: 3306,
         user: 'outside',
         db: 'mvc_laundry_service_db',
@@ -198,7 +198,7 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
   Future<void> _updateUser(int id, String completeName, String sex, String address, String phone, String status, String role, String email, String username) async {
     try {
       final connectionSettings = ConnectionSettings(
-        host: '192.168.1.9',
+        host: '192.168.1.11',
         port: 3306,
         user: 'outside',
         db: 'mvc_laundry_service_db',
@@ -270,7 +270,7 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
   Future<void> _deleteUser(int userId) async {
     try {
       final connectionSettings = ConnectionSettings(
-        host: '192.168.1.9',
+        host: '192.168.1.11',
         port: 3306,
         user: 'outside',
         db: 'mvc_laundry_service_db',

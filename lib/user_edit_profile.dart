@@ -35,7 +35,7 @@ class _UserEditProfilePageState extends State<UserEditProfilePage> {
   Future<void> _fetchUserData() async {
     try {
       final connectionSettings = ConnectionSettings(
-        host: '192.168.1.9',
+        host: '192.168.1.11',
         port: 3306,
         user: 'outside',
         db: 'mvc_laundry_service_db',
@@ -68,7 +68,7 @@ class _UserEditProfilePageState extends State<UserEditProfilePage> {
   Future<void> _updateUserProfile() async {
     try {
       final connectionSettings = ConnectionSettings(
-        host: '192.168.1.9',
+        host: '192.168.1.11',
         port: 3306,
         user: 'outside',
         db: 'mvc_laundry_service_db',
